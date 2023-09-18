@@ -18,6 +18,10 @@ namespace MusicFrog
         private readonly Thread tickThread;
 
         private float minVolume;
+
+        private Icon FrogIdle;
+        private Icon FrogTalking;
+
         private ToolStripMenuItem minVolumeMenu;
         private ToolStripMenuItem addToStartupButton;
 
@@ -34,9 +38,11 @@ namespace MusicFrog
 
         private void SetIconSettings()
         {
+            FrogIdle = BitmapToIcon(Resources.frog_1);
+            FrogTalking = BitmapToIcon(Resources.frog_2);
             icon = new NotifyIcon
             {
-                Icon = BitmapToIcon(Resources.frog_1),
+                Icon = FrogIdle,
                 Text = "MusicFrog",
                 ContextMenuStrip = GetContextMenuStrip(),
                 Visible = true
@@ -86,43 +92,43 @@ namespace MusicFrog
             {
                 new ToolStripMenuItem("100%", null, SetMinVolume)
                 {
-                    Checked = minVolume == 100 / 100f
+                    Checked = minVolume == 1f
                 },
                 new ToolStripMenuItem("90%", null, SetMinVolume)
                 {
-                    Checked = minVolume == 90 / 100f
+                    Checked = minVolume == 0.9f
                 },
                 new ToolStripMenuItem("80%", null, SetMinVolume)
                 {
-                    Checked = minVolume == 80 / 100f
+                    Checked = minVolume == 0.8f
                 },
                 new ToolStripMenuItem("70%", null, SetMinVolume)
                 {
-                    Checked = minVolume == 70 / 100f
+                    Checked = minVolume == 0.7f
                 },
                 new ToolStripMenuItem("60%", null, SetMinVolume)
                 {
-                    Checked = minVolume == 60 / 100f
+                    Checked = minVolume == 0.6f
                 },
                 new ToolStripMenuItem("50%", null, SetMinVolume)
                 {
-                    Checked = minVolume == 50 / 100f
+                    Checked = minVolume == 0.5f
                 },
                 new ToolStripMenuItem("40%", null, SetMinVolume)
                 {
-                    Checked = minVolume == 40 / 100f
+                    Checked = minVolume == 0.4f
                 },
                 new ToolStripMenuItem("30%", null, SetMinVolume)
                 {
-                    Checked = minVolume == 30 / 100f
+                    Checked = minVolume == 0.3f
                 },
                 new ToolStripMenuItem("20%", null, SetMinVolume)
                 {
-                    Checked = minVolume == 20 / 100f
+                    Checked = minVolume == 0.2f
                 },
                 new ToolStripMenuItem("10%", null, SetMinVolume)
                 {
-                    Checked = minVolume == 10 / 100f
+                    Checked = minVolume == 0.1f
                 }
             };
         }
@@ -145,10 +151,10 @@ namespace MusicFrog
         {
             if (isIdle)
             {
-                icon.Icon = BitmapToIcon(Resources.frog_1);
+                icon.Icon = FrogIdle;
                 return;
             }
-            icon.Icon = BitmapToIcon(Resources.frog_2);
+            icon.Icon = FrogTalking;
         }
 
         private void SetMinVolume(object sender, EventArgs e)
