@@ -10,6 +10,6 @@
 
 A frog on the taskbar that responds to any sounds. 🐸
 
-I was inspired by (RunCat)[https://github.com/Kyome22/RunCat_for_windows] from Kyome22.
+I was inspired by [RunCat](https://github.com/Kyome22/RunCat_for_windows) from Kyome22.
 
 `SPECIAL THANKS!` Thanks to `eskeyf` for the beautiful frog sprites.
