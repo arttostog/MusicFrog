@@ -21,5 +21,5 @@ I was inspired by [RunCat](https://github.com/Kyome22/RunCat_for_windows) from K
 </div>
 
 - Go to [Releases](https://github.com/arttostog/MusicFrog/releases) and download the latest version of the app from there.
-- Unpack the archive and run MusicFrog.exe.
+- Unpack the archive and run `MusicFrog.exe`.
 - Done!
