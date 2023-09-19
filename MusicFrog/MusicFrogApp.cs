@@ -165,6 +165,7 @@ namespace MusicFrog
 
         private void Exit(object sender, EventArgs e)
         {
+            Icon.Visible = false;
             User.Default.minVolume = MinVolume;
             User.Default.Save();
             TickThread.Abort();
