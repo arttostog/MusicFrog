@@ -11,157 +11,126 @@ namespace MusicFrog
 {
     public class MusicFrogApp : ApplicationContext
     {
-        private NotifyIcon icon;
+        private NotifyIcon Icon;
 
-        private readonly MMDeviceEnumerator devices;
+        private readonly AudioMeterInformation Device;
 
-        private readonly Thread tickThread;
+        private readonly Thread TickThread;
 
-        private float minVolume;
+        private float MinVolume;
 
         private Icon FrogIdle;
         private Icon FrogTalking;
 
-        private ToolStripMenuItem minVolumeMenu;
-        private ToolStripMenuItem addToStartupButton;
+        private ContextMenuStrip Menu;
+        private ToolStripMenuItem MinVolumeMenu;
+        private ToolStripMenuItem AddToStartupButton;
 
         public MusicFrogApp()
         {
-            minVolume = User.Default.minVolume;
+            MinVolume = User.Default.minVolume;
+            SetContextMenuStrip();
             SetIconSettings();
-            devices = new MMDeviceEnumerator();
-            devices.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+
+            MMDeviceEnumerator Devices = new MMDeviceEnumerator();
+            Device = Devices.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia).AudioMeterInformation;
+
             Application.ApplicationExit += new EventHandler(Exit);
-            tickThread = new Thread(Tick);
-            tickThread.Start();
+            
+            TickThread = new Thread(Tick);
+            TickThread.Start();
+        }
+
+        private void SetContextMenuStrip()
+        {
+            Menu = new ContextMenuStrip();
+
+            MinVolumeMenu = new ToolStripMenuItem("Min volume", null, GetMinVolumeMenuItems());
+            AddToStartupButton = new ToolStripMenuItem("Add to startup", null, AddToStartup)
+            {
+                Checked = IsStartupEnabled()
+            };
+            ToolStripMenuItem ExitButton = new ToolStripMenuItem("Exit", null, Exit);
+
+            Menu.Items.AddRange(new ToolStripItem[]
+            {
+                MinVolumeMenu,
+                AddToStartupButton,
+                ExitButton
+            });
         }
 
         private void SetIconSettings()
         {
             FrogIdle = BitmapToIcon(Resources.frog_1);
             FrogTalking = BitmapToIcon(Resources.frog_2);
-            icon = new NotifyIcon
+            Icon = new NotifyIcon
             {
                 Icon = FrogIdle,
                 Text = "MusicFrog",
-                ContextMenuStrip = GetContextMenuStrip(),
+                ContextMenuStrip = Menu,
                 Visible = true
             };
         }
 
         private Icon BitmapToIcon(Bitmap bitmap)
         {
-            return Icon.FromHandle(bitmap.GetHicon());
-        }
-
-        private ContextMenuStrip GetContextMenuStrip()
-        {
-            ContextMenuStrip menu = new ContextMenuStrip();
-
-            minVolumeMenu = new ToolStripMenuItem("Min volume", null, GetMinVolumeMenuItems());
-
-            addToStartupButton = new ToolStripMenuItem("Add to startup", null, AddToStartup)
-            {
-                Checked = IsStartupEnabled()
-            };
-
-            ToolStripMenuItem exitButton = new ToolStripMenuItem("Exit", null, Exit);
-
-            menu.Items.AddRange(new ToolStripItem[]
-            {
-                minVolumeMenu,
-                addToStartupButton,
-                exitButton
-            });
-
-            return menu;
-        }
-
-        private bool IsStartupEnabled()
-        {
-            string keyName = @"Software\Microsoft\Windows\CurrentVersion\Run";
-            using (RegistryKey rKey = Registry.CurrentUser.OpenSubKey(keyName))
-            {
-                return (rKey.GetValue(Application.ProductName) != null);
-            }
+            return System.Drawing.Icon.FromHandle(bitmap.GetHicon());
         }
 
         private ToolStripMenuItem[] GetMinVolumeMenuItems()
         {
             return new ToolStripMenuItem[]
             {
-                new ToolStripMenuItem("100%", null, SetMinVolume)
-                {
-                    Checked = minVolume == 1f
-                },
-                new ToolStripMenuItem("90%", null, SetMinVolume)
-                {
-                    Checked = minVolume == 0.9f
-                },
-                new ToolStripMenuItem("80%", null, SetMinVolume)
-                {
-                    Checked = minVolume == 0.8f
-                },
-                new ToolStripMenuItem("70%", null, SetMinVolume)
-                {
-                    Checked = minVolume == 0.7f
-                },
-                new ToolStripMenuItem("60%", null, SetMinVolume)
-                {
-                    Checked = minVolume == 0.6f
-                },
-                new ToolStripMenuItem("50%", null, SetMinVolume)
-                {
-                    Checked = minVolume == 0.5f
-                },
-                new ToolStripMenuItem("40%", null, SetMinVolume)
-                {
-                    Checked = minVolume == 0.4f
-                },
-                new ToolStripMenuItem("30%", null, SetMinVolume)
-                {
-                    Checked = minVolume == 0.3f
-                },
-                new ToolStripMenuItem("20%", null, SetMinVolume)
-                {
-                    Checked = minVolume == 0.2f
-                },
-                new ToolStripMenuItem("10%", null, SetMinVolume)
-                {
-                    Checked = minVolume == 0.1f
-                }
+                new ToolStripMenuItem("100%", null, SetMinVolume) { Checked = MinVolume == 1f },
+                new ToolStripMenuItem("90%", null, SetMinVolume) { Checked = MinVolume == 0.9f },
+                new ToolStripMenuItem("80%", null, SetMinVolume) { Checked = MinVolume == 0.8f },
+                new ToolStripMenuItem("70%", null, SetMinVolume) { Checked = MinVolume == 0.7f },
+                new ToolStripMenuItem("60%", null, SetMinVolume) { Checked = MinVolume == 0.6f },
+                new ToolStripMenuItem("50%", null, SetMinVolume) { Checked = MinVolume == 0.5f },
+                new ToolStripMenuItem("40%", null, SetMinVolume) { Checked = MinVolume == 0.4f },
+                new ToolStripMenuItem("30%", null, SetMinVolume) { Checked = MinVolume == 0.3f },
+                new ToolStripMenuItem("20%", null, SetMinVolume) { Checked = MinVolume == 0.2f },
+                new ToolStripMenuItem("10%", null, SetMinVolume) { Checked = MinVolume == 0.1f }
             };
+        }
+
+        private bool IsStartupEnabled()
+        {
+            using (RegistryKey rKey = Registry.CurrentUser.OpenSubKey(
+                @"Software\Microsoft\Windows\CurrentVersion\Run"))
+            {
+                return rKey.GetValue(Application.ProductName) != null;
+            }
         }
 
         private void Tick()
         {
             while (true)
             {
-                OnTick();
+                SetIcon(Device.MasterPeakValue < MinVolume);
                 Thread.Sleep(100);
             }
         }
 
-        private void OnTick()
+        private void SetIcon(bool IsIdle)
         {
-            SetIcon(devices.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia).AudioMeterInformation.MasterPeakValue < minVolume);
-        }
-
-        private void SetIcon(bool isIdle)
-        {
-            if (isIdle)
+            if (IsIdle && Icon.Icon.Equals(FrogTalking))
             {
-                icon.Icon = FrogIdle;
+                Icon.Icon = FrogIdle;
                 return;
             }
-            icon.Icon = FrogTalking;
+            if (!IsIdle && Icon.Icon.Equals(FrogIdle))
+            {
+                Icon.Icon = FrogTalking;
+            }
         }
 
         private void SetMinVolume(object sender, EventArgs e)
         {
             ToolStripMenuItem item = (ToolStripMenuItem)sender;
-            UpdateCheckedState(item, minVolumeMenu);
-            minVolume = int.Parse(item.Text.Replace("%", "")) / 100f;
+            UpdateCheckedState(item, MinVolumeMenu);
+            MinVolume = int.Parse(item.Text.Replace("%", "")) / 100f;
         }
 
         private void UpdateCheckedState(ToolStripMenuItem item, ToolStripMenuItem menu)
@@ -175,26 +144,30 @@ namespace MusicFrog
 
         private void AddToStartup(object sender, EventArgs e)
         {
-            addToStartupButton.Checked = !addToStartupButton.Checked;
-            string keyName = @"Software\Microsoft\Windows\CurrentVersion\Run";
-            using (RegistryKey rKey = Registry.CurrentUser.OpenSubKey(keyName, true))
+            AddToStartupButton.Checked = !AddToStartupButton.Checked;
+            using (RegistryKey RegKey = Registry.CurrentUser.OpenSubKey(
+                @"Software\Microsoft\Windows\CurrentVersion\Run", true))
             {
-                if (addToStartupButton.Checked)
-                {
-                    rKey.SetValue(Application.ProductName, Process.GetCurrentProcess().MainModule.FileName);
-                    rKey.Close();
-                    return;
-                }
-                rKey.DeleteValue(Application.ProductName, false);
-                rKey.Close();
+                SetValue(RegKey);
+                RegKey.Close();
             }
+        }
+
+        private void SetValue(RegistryKey RegKey)
+        {
+            if (AddToStartupButton.Checked)
+            {
+                RegKey.SetValue(Application.ProductName, Process.GetCurrentProcess().MainModule.FileName);
+                return;
+            }
+            RegKey.DeleteValue(Application.ProductName, false);
         }
 
         private void Exit(object sender, EventArgs e)
         {
-            User.Default.minVolume = minVolume;
+            User.Default.minVolume = MinVolume;
             User.Default.Save();
-            tickThread.Abort();
+            TickThread.Abort();
             Environment.Exit(0);
         }
     }
