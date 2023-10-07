@@ -13,7 +13,7 @@ namespace MusicFrog
     {
         private NotifyIcon Icon;
 
-        private readonly AudioMeterInformation Device;
+        public AudioMeterInformation Device { set; private get; }
 
         private readonly Thread TickThread;
 
@@ -29,11 +29,13 @@ namespace MusicFrog
         public MusicFrogApp()
         {
             MinVolume = User.Default.minVolume;
+
             SetContextMenuStrip();
             SetIconSettings();
 
-            MMDeviceEnumerator Devices = new MMDeviceEnumerator();
-            Device = Devices.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia).AudioMeterInformation;
+            MMDeviceEnumerator MMDeviceEnum = new MMDeviceEnumerator();
+            MMDeviceEnum.RegisterEndpointNotificationCallback(new NotificationClient(this));
+            Device = MMDeviceEnum.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia).AudioMeterInformation;
 
             Application.ApplicationExit += new EventHandler(Exit);
             
@@ -115,12 +117,12 @@ namespace MusicFrog
 
         private void SetIcon(bool IsIdle)
         {
-            if (IsIdle && Icon.Icon.Equals(FrogTalking))
+            if (IsIdle)
             {
-                Icon.Icon = FrogIdle;
+                if (Icon.Icon.Equals(FrogTalking)) Icon.Icon = FrogIdle;
                 return;
             }
-            if (!IsIdle && Icon.Icon.Equals(FrogIdle))
+            if (Icon.Icon.Equals(FrogIdle))
             {
                 Icon.Icon = FrogTalking;
             }
@@ -145,8 +147,8 @@ namespace MusicFrog
         private void AddToStartup(object sender, EventArgs e)
         {
             AddToStartupButton.Checked = !AddToStartupButton.Checked;
-            using (RegistryKey RegKey = Registry.CurrentUser.OpenSubKey(
-                @"Software\Microsoft\Windows\CurrentVersion\Run", true))
+            using (RegistryKey RegKey = Registry.CurrentUser.OpenSubKey
+                (@"Software\Microsoft\Windows\CurrentVersion\Run", true))
             {
                 SetValue(RegKey);
                 RegKey.Close();
