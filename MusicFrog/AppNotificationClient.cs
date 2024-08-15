@@ -3,11 +3,13 @@ using NAudio.CoreAudioApi.Interfaces;
 
 namespace MusicFrog
 {
-    class NotificationClient : IMMNotificationClient
+    internal class AppNotificationClient : IMMNotificationClient
     {
-        private readonly MusicFrogApp App;
+        private readonly AppVolume _appVolume;
+        private readonly MMDeviceEnumerator _deviceEnumerator = new MMDeviceEnumerator();
 
-        public NotificationClient(MusicFrogApp App) { this.App = App; }
+        public AppNotificationClient(AppVolume appVolume) =>
+            _appVolume = appVolume;
 
         public void OnDeviceStateChanged(string deviceId, DeviceState newState) { }
 
@@ -17,7 +19,8 @@ namespace MusicFrog
 
         public void OnDefaultDeviceChanged(DataFlow flow, Role role, string defaultDeviceId)
         {
-            App.Device = new MMDeviceEnumerator().GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia).AudioMeterInformation;
+            if (flow == DataFlow.Render && role == Role.Multimedia)
+                _appVolume.Device = _deviceEnumerator.GetDefaultAudioEndpoint(flow, role).AudioMeterInformation;
         }
 
         public void OnPropertyValueChanged(string pwstrDeviceId, PropertyKey key) { }
